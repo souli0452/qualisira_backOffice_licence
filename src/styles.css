@@ -1,0 +1,183 @@
+@import 'primeicons/primeicons.css';
+
+/*
+ * Identité QualiSira : Poppins, bleu marine #1e3a5f, cartes blanches bordées de gris ardoise.
+ * PrimeNG porte les composants ; ce fichier ne définit que l'ossature et les quelques classes
+ * partagées entre les écrans.
+ */
+
+:root {
+    --marine: #1e3a5f;
+    --marine-clair: #2c5282;
+    --ardoise-50: #f8fafc;
+    --ardoise-100: #f1f5f9;
+    --ardoise-200: #e2e8f0;
+    --ardoise-400: #94a3b8;
+    --ardoise-500: #64748b;
+    --ardoise-700: #334155;
+    --ardoise-800: #1e293b;
+    --rayon: 0.5rem;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--ardoise-50);
+    color: var(--ardoise-700);
+    font-size: 14px;
+}
+
+/* ---------------------------------------------------------------- ossature */
+
+.appli { display: flex; min-height: 100vh; }
+
+.rail {
+    width: 250px;
+    flex: 0 0 250px;
+    background: var(--marine);
+    color: #fff;
+    padding: 1.25rem 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.rail-marque {
+    padding: 0 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, .12);
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+}
+/* Le logo est bleu-canard sur fond clair : posé tel quel sur le marine du rail, il s'y noierait.
+   La pastille blanche lui rend le fond pour lequel il a été dessiné, sans le retoucher. */
+.rail-marque .logo {
+    width: 2.25rem;
+    height: 2.25rem;
+    flex-shrink: 0;
+    background: #fff;
+    border-radius: .5rem;
+    padding: .3rem;
+    box-sizing: border-box;
+    object-fit: contain;
+}
+.rail-marque .nom { font-weight: 700; font-size: 1.05rem; }
+.rail-marque .sous-titre { font-size: .72rem; color: rgba(255, 255, 255, .6); margin-top: .15rem; }
+
+.rail-nav { padding: 1rem .75rem; display: flex; flex-direction: column; gap: .25rem; flex: 1; }
+
+.rail-nav a {
+    text-decoration: none;
+    padding: .65rem .85rem;
+    border-radius: var(--rayon);
+    color: rgba(255, 255, 255, .78);
+    font-size: .875rem;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    transition: background .15s;
+}
+.rail-nav a:hover { background: rgba(255, 255, 255, .08); color: #fff; }
+.rail-nav a.actif { background: rgba(255, 255, 255, .14); color: #fff; font-weight: 600; }
+
+.rail-pied { padding: 1rem 1.25rem 0; font-size: .7rem; color: rgba(255, 255, 255, .45); }
+.session-nom { font-size: .8rem; color: rgba(255, 255, 255, .85); font-weight: 500; }
+.session-mode { font-size: .68rem; color: rgba(255, 255, 255, .4); }
+
+.contenu { flex: 1; padding: 1.75rem 2rem; min-width: 0; }
+
+.entete {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap;
+}
+.entete h1 { margin: 0; font-size: 1.4rem; font-weight: 700; color: var(--ardoise-800); }
+.entete p { margin: .3rem 0 0; color: var(--ardoise-500); font-size: .85rem; max-width: 65ch; }
+
+/* ---------------------------------------------------------------- cartes */
+
+.carte {
+    background: #fff;
+    border: 1px solid var(--ardoise-200);
+    border-radius: var(--rayon);
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+}
+.carte-titre {
+    padding: .9rem 1.15rem;
+    border-bottom: 1px solid var(--ardoise-200);
+    font-weight: 600;
+    color: var(--ardoise-800);
+}
+.carte-corps { padding: 1.15rem; }
+
+.principal { font-weight: 600; color: var(--ardoise-800); }
+.secondaire { font-size: .78rem; color: var(--ardoise-500); }
+
+.resume { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; margin-bottom: 1.25rem; }
+.tuile { background: #fff; border: 1px solid var(--ardoise-200); border-radius: var(--rayon); padding: .9rem 1rem; }
+.tuile .nombre { font-size: 1.5rem; font-weight: 700; color: var(--marine); line-height: 1.2; }
+.tuile .quoi { font-size: .74rem; color: var(--ardoise-500); margin-top: .1rem; }
+
+/* ---------------------------------------------------------------- formulaires */
+
+.grille { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.pleine { grid-column: 1 / -1; }
+
+.champ { display: flex; flex-direction: column; gap: .3rem; }
+.champ > label { font-size: .78rem; font-weight: 500; color: var(--ardoise-700); }
+.requis { color: #dc2626; }
+.aide { font-size: .72rem; color: var(--ardoise-400); }
+
+.cases { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; }
+.case {
+    display: flex; gap: .55rem; align-items: flex-start;
+    border: 1px solid var(--ardoise-200); border-radius: var(--rayon);
+    padding: .6rem .7rem; cursor: pointer;
+}
+.case:hover { border-color: var(--marine-clair); }
+.case .titre { display: block; font-weight: 500; color: var(--ardoise-800); font-size: .82rem; }
+.case .detail { display: block; font-size: .7rem; color: var(--ardoise-400); }
+
+.actions { display: flex; gap: .5rem; justify-content: flex-end; flex-wrap: wrap; }
+
+.jeton {
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    font-size: .74rem;
+    background: var(--ardoise-50);
+    border: 1px solid var(--ardoise-200);
+    border-radius: var(--rayon);
+    padding: .75rem;
+    word-break: break-all;
+    line-height: 1.55;
+    color: var(--ardoise-700);
+    max-height: 180px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+}
+
+.encart {
+    padding: .8rem 1rem; border-radius: var(--rayon); font-size: .84rem;
+    background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe;
+}
+
+.vide { padding: 2.5rem 1rem; text-align: center; color: var(--ardoise-400); }
+
+@media (max-width: 900px) {
+    .appli { flex-direction: column; }
+    .rail { width: 100%; flex: none; }
+    .rail-nav { flex-direction: row; flex-wrap: wrap; }
+    .grille, .cases, .resume { grid-template-columns: 1fr; }
+    .contenu { padding: 1.25rem; }
+}
+
+/* Une entrée de menu destructrice — suppression, révocation. Elle voisine avec les autres dans
+   une liste, et rien ne la distinguerait sans cela : on ne supprime pas par mégarde. */
+:root .p-menu .entree-danger .p-menu-item-link,
+:root .p-menu .entree-danger .p-menu-item-icon {
+    color: #b91c1c;
+}
+:root .p-menu .entree-danger .p-menu-item-link:hover {
+    background: #fef2f2;
+}
