@@ -1,23 +1,32 @@
 {
+    "//": [
+        "Relais du serveur de développement vers le service de licences.",
+        "",
+        "changeOrigin est à FALSE, et c'est essentiel pour /oauth2, /login et /logout :",
+        "Spring déduit de l'en-tête « Host » l'adresse de retour qu'il envoie à Keycloak",
+        "(redirect_uri). Remplacer cet en-tête par celui de la cible lui ferait réclamer",
+        "http://localhost:8099/login/oauth2/code/keycloak, que le royaume refuse — seul",
+        "http://localhost:4300/* y est déclaré. L'erreur ne surgit qu'au passage en mode",
+        "Keycloak, longtemps après qu'on a écrit cette ligne."
+    ],
     "/api": {
         "target": "http://localhost:8099",
         "secure": false,
-        "changeOrigin": true,
-        "logLevel": "debug"
+        "changeOrigin": false
     },
     "/oauth2": {
         "target": "http://localhost:8099",
         "secure": false,
-        "changeOrigin": true
+        "changeOrigin": false
     },
     "/login": {
         "target": "http://localhost:8099",
         "secure": false,
-        "changeOrigin": true
+        "changeOrigin": false
     },
     "/logout": {
         "target": "http://localhost:8099",
         "secure": false,
-        "changeOrigin": true
+        "changeOrigin": false
     }
 }
