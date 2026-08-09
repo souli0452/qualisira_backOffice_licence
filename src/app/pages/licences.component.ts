@@ -416,7 +416,10 @@ export class LicencesComponent implements OnInit {
     get offresProposables(): { id: string; libelle: string }[] {
         return this.offres
             .filter((o) => o.actif)
-            .map((o) => ({ id: o.id!, libelle: `${o.libelle} — ${o.dureeMois} mois` }));
+            .map((o) => ({
+                id: o.id!,
+                libelle: `${o.libelle} — ${o.duree} ${o.uniteDuree === 'JOURS' ? 'j' : 'mois'}`
+            }));
     }
 
     // ------------------------------------------------------------ émission
@@ -446,7 +449,9 @@ export class LicencesComponent implements OnInit {
     appliquerOffre(): void {
         const offre = this.offres.find((o) => o.id === this.demande.offreId);
         this.modulesChoisis = offre ? [...offre.modules] : [];
-        this.placeholderDuree = offre ? `${offre.dureeMois} (offre)` : 'obligatoire';
+        this.placeholderDuree = offre
+            ? `${offre.duree} ${offre.uniteDuree === 'JOURS' ? 'jours' : 'mois'} (offre)`
+            : 'obligatoire';
         this.placeholderUtilisateurs = offre
             ? `${offre.utilisateursMax === 0 ? 'sans limite' : offre.utilisateursMax} (offre)`
             : '0 = sans limite';

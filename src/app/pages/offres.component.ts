@@ -50,7 +50,7 @@ import { ModuleVendable, OffreAbonnement } from '../models/licences.model';
                     </div>
                 </ng-template>
 
-                <ng-template gabaritColonne="duree" let-offre>{{ offre.dureeMois }} mois</ng-template>
+                <ng-template gabaritColonne="duree" let-offre>{{ dureeLisible(offre) }}</ng-template>
 
                 <ng-template gabaritColonne="utilisateurs" let-offre>
                     {{ offre.utilisateursMax === 0 ? 'Sans limite' : offre.utilisateursMax }}
@@ -85,8 +85,18 @@ import { ModuleVendable, OffreAbonnement } from '../models/licences.model';
                         <input pInputText [(ngModel)]="edite.libelle">
                     </div>
                     <div class="champ">
-                        <label>Durée (mois) <span class="requis">*</span></label>
-                        <p-inputnumber [(ngModel)]="edite.dureeMois" [min]="1"></p-inputnumber>
+                        <label>Durée <span class="requis">*</span></label>
+                        <div style="display:flex;gap:.5rem">
+                            <p-inputnumber [(ngModel)]="edite.duree" [min]="1"
+                                           styleClass="duree-nombre"></p-inputnumber>
+                            <p-select [(ngModel)]="edite.uniteDuree" [options]="unites"
+                                      optionLabel="libelle" optionValue="valeur"
+                                      appendTo="body" styleClass="duree-unite"></p-select>
+                        </div>
+                        <span class="aide">Les jours servent aux périodes courtes — un essai de
+                            sept jours. Les mois valent pour un abonnement : un an souscrit le
+                            29 février se termine le 28 février suivant, ce qu'un compte en jours
+                            manquerait d'un jour une année sur quatre.</span>
                     </div>
                     <div class="champ">
                         <label>Utilisateurs</label>
@@ -157,6 +167,17 @@ export class OffresComponent implements OnInit {
      */
     protected readonly devises = ['XOF', 'EUR', 'USD', 'XAF', 'MAD'];
 
+    protected readonly unites = [
+        { libelle: 'mois', valeur: 'MOIS' },
+        { libelle: 'jours', valeur: 'JOURS' }
+    ];
+
+    /** « 7 jours », « 12 mois » — accordé ici, l'écran n'ayant pas à le refaire à chaque endroit. */
+    protected dureeLisible(offre: OffreAbonnement): string {
+        const unite = offre.uniteDuree === 'JOURS' ? 'jour' : 'mois';
+        return `${offre.duree} ${unite}${offre.uniteDuree === 'JOURS' && offre.duree > 1 ? 's' : ''}`;
+    }
+
     /** Le montant tel qu'on le lit — séparateurs de milliers, et la devise à côté. */
     protected montantLisible(offre: OffreAbonnement): string {
         if (offre.montant == null) {
@@ -225,7 +246,8 @@ export class OffresComponent implements OnInit {
     ouvrir(offre?: OffreAbonnement): void {
         this.edite = offre
             ? { ...offre, modules: [...offre.modules] }
-            : { code: '', libelle: '', dureeMois: 12, utilisateursMax: 25, modules: [], actif: true,
+            : { code: '', libelle: '', duree: 12, uniteDuree: 'MOIS', utilisateursMax: 25,
+                modules: [], actif: true,
                 montant: null, devise: 'XOF' };
         this.ouvert = true;
     }

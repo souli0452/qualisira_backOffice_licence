@@ -24,12 +24,22 @@ export interface Partenaire {
     creePar?: string | null;
 }
 
+/**
+ * L'unité dans laquelle s'exprime la durée d'une offre.
+ *
+ * <p>Une durée et son unité, plutôt que deux champs dont un seul s'applique : « 7 » et « jours »
+ * ne laissent aucune place au doute.</p>
+ */
+export type UniteDeDuree = 'JOURS' | 'MOIS';
+
 export interface OffreAbonnement {
     id?: string;
     code: string;
     libelle: string;
     description?: string | null;
-    dureeMois: number;
+    /** Durée couverte, exprimée dans son unité — 7 JOURS, 12 MOIS. */
+    duree: number;
+    uniteDuree: UniteDeDuree;
     /** 0 vaut « sans limite ». */
     utilisateursMax: number;
     modules: string[];
