@@ -2,6 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { Observable, catchError, tap, throwError } from 'rxjs';
 
+import { environment } from '../../environments/environment';
 import { ModeDAuthentification, Session } from '../models/licences.model';
 
 /**
@@ -29,7 +30,7 @@ export class SessionService {
      * son mot de passe est bon, ni qu'il n'a simplement pas frappé à la bonne porte.</p>
      */
     mode(): Observable<ModeDAuthentification> {
-        return this.http.get<ModeDAuthentification>('/api/session/mode');
+        return this.http.get<ModeDAuthentification>(`${environment.apiUrl}/api/session/mode`);
     }
 
     /**
@@ -40,7 +41,7 @@ export class SessionService {
      * enclenche le flot du code d'autorisation ; la session est ouverte au retour.</p>
      */
     connexionKeycloak(): void {
-        window.location.href = '/oauth2/authorization/keycloak';
+        window.location.href = `${environment.apiUrl}/oauth2/authorization/keycloak`;
     }
 
     /**
@@ -59,7 +60,7 @@ export class SessionService {
         const cookie = document.cookie.split('; ').find((c) => c.startsWith('XSRF-TOKEN='));
         const formulaire = document.createElement('form');
         formulaire.method = 'post';
-        formulaire.action = '/logout';
+        formulaire.action = `${environment.apiUrl}/logout`;
         if (cookie) {
             const champ = document.createElement('input');
             champ.type = 'hidden';
@@ -73,7 +74,7 @@ export class SessionService {
 
     /** Relit la session auprès du serveur ; échoue si elle n'est pas ouverte. */
     verifier(): Observable<Session> {
-        return this.http.get<Session>('/api/session').pipe(
+        return this.http.get<Session>(`${environment.apiUrl}/api/session`).pipe(
             tap((session) => this.session.set(session)),
             catchError((erreur: HttpErrorResponse) => {
                 this.session.set(undefined);
@@ -83,7 +84,7 @@ export class SessionService {
     }
 
     connexion(utilisateur: string, motDePasse: string): Observable<Session> {
-        return this.http.post<Session>('/api/session/connexion', { utilisateur, motDePasse }).pipe(
+        return this.http.post<Session>(`${environment.apiUrl}/api/session/connexion`, { utilisateur, motDePasse }).pipe(
             tap((session) => this.session.set(session)),
             catchError((erreur: HttpErrorResponse) => throwError(
                 () => new Error(erreur.error?.message ?? 'Connexion impossible.')))
@@ -91,14 +92,14 @@ export class SessionService {
     }
 
     deconnexion(): Observable<unknown> {
-        return this.http.post('/api/session/deconnexion', {}).pipe(
+        return this.http.post(`${environment.apiUrl}/api/session/deconnexion`, {}).pipe(
             tap(() => this.session.set(undefined))
         );
     }
 
     /** Le titulaire change son propre mot de passe ; l'ancien est exigé par le serveur. */
     changerLeMotDePasse(ancien: string, nouveau: string): Observable<unknown> {
-        return this.http.post('/api/session/mot-de-passe', { ancien, nouveau }).pipe(
+        return this.http.post(`${environment.apiUrl}/api/session/mot-de-passe`, { ancien, nouveau }).pipe(
             tap(() => {
                 const ouverte = this.session();
                 if (ouverte) {

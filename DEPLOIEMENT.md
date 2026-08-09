@@ -1,16 +1,25 @@
 # Déploiement du back-office
 
-## Il n'y a aucune variable d'environnement, et aucun serveur web à installer
+## Deux environnements, une seule variable
 
-Ce front est une application Angular compilée en **fichiers statiques**. Il ne lit aucune
-configuration au démarrage, et il n'existe volontairement pas de fichier `environment.ts` : tous
-ses appels sont **relatifs** — `/api`, `/oauth2`, `/logout`.
+Ce front est une application Angular compilée en **fichiers statiques**. Ce qui change d'un
+environnement à l'autre tient en une valeur, `apiUrl`, choisie **à la compilation** :
 
-Il n'est pas non plus servi par un serveur à lui. **C'est le service de licences qui le sert**,
-comme le disait déjà son code : *« le back-office est servi par cette application »*.
+| Fichier | `apiUrl` | Quand |
+| --- | --- | --- |
+| `src/environments/environment.ts` | `http://localhost:8099` | développement — `ng serve` sur 4300 |
+| `src/environments/environment.prod.ts` | *(vide)* | production — appels relatifs |
 
-Ce montage n'est pas une commodité. Il fait disparaître trois problèmes plutôt que de les
-configurer :
+`ng build` prend la seconde ; `ng build --configuration development` et `ng serve` prennent la
+première. La substitution est déclarée dans `angular.json` (`fileReplacements`).
+
+**En production, l'adresse est vide et tous les appels sont relatifs** : le service de licences
+sert lui-même le back-office, comme le disait déjà son code — *« le back-office est servi par
+cette application »*. C'est ce qui permet de promouvoir le **même artefact** de la recette à la
+production après validation.
+
+Ce montage n'est pas une commodité. En production, il fait disparaître trois problèmes plutôt que
+de les configurer :
 
 - **Pas de CORS.** La session est portée par un cookie `HttpOnly` en `SameSite=Lax` : servi
   ailleurs, il n'accompagnerait pas les appels, et il faudrait ouvrir des origines à la main.
@@ -63,21 +72,26 @@ rafraîchit.
 ## Développer
 
 ```bash
-npx ng build --watch        # reconstruit à chaque enregistrement
+npm start        # ng serve, sur http://localhost:4300
 ```
 
-et lancer le service de licences en lui désignant la sortie :
+L'API reste sur 8099 : deux origines, donc, et c'est **le service qui les accepte** par sa
+configuration CORS — `LICENCES_CORS` vaut `http://localhost:4300` par défaut. Un relais local
+(`proxy.conf.json`) faisait ce travail auparavant ; il a été retiré, parce que ses réglages
+divergeaient d'un poste à l'autre et qu'il réécrivait l'en-tête `Host`, cassant le flot Keycloak
+sans prévenir.
 
-```bash
-LICENCES_FRONT=…/backOffice_licences/dist/backoffice-licences/browser  mvn spring-boot:run
-```
+La session traverse sans encombre : le cookie est en `SameSite=Lax`, et deux ports du même hôte
+relèvent du même site — seul un autre domaine l'aurait retenu.
 
-Tout est alors sur `http://localhost:8099`. Il n'y a plus de `ng serve` ni de `proxy.conf.json` :
-le serveur de développement d'Angular servait le front sur un autre port que l'API, ce qui
-imposait un relais — et ce relais réécrivait l'en-tête `Host`, cassant le flot Keycloak sans
-prévenir.
-
-Un rafraîchissement du navigateur suffit à voir un changement.
+> **Une réserve, pour le flot Keycloak.** Depuis `ng serve`, la connexion par le royaume renvoie
+> le navigateur sur `:8099` et non sur `:4300` : c'est le service qui reçoit le retour. Pour
+> l'éprouver dans les conditions réelles, construire et se placer sur le service seul :
+>
+> ```bash
+> npx ng build
+> LICENCES_FRONT=…/dist/backoffice-licences/browser  mvn spring-boot:run   # tout sur :8099
+> ```
 
 ---
 

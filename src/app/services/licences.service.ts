@@ -1,6 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, throwError } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 import {
     ContenuDeLicence,
@@ -43,7 +44,7 @@ export class LicencesService {
 
     /** Une page de partenaires, filtrée par le serveur — pour l'écran du fichier clients. */
     pagePartenaires(demande: DemandeDePage): Observable<PageVue<PartenaireVue>> {
-        return this.http.get<PageVue<PartenaireVue>>('/api/partenaires',
+        return this.http.get<PageVue<PartenaireVue>>(`${environment.apiUrl}/api/partenaires`,
             { params: this.parametres(demande) }).pipe(catchError(this.echec));
     }
 
@@ -54,78 +55,78 @@ export class LicencesService {
      * de la première page, sans que rien ne le dise.</p>
      */
     partenaires(): Observable<Partenaire[]> {
-        return this.http.get<Partenaire[]>('/api/partenaires/selection').pipe(catchError(this.echec));
+        return this.http.get<Partenaire[]>(`${environment.apiUrl}/api/partenaires/selection`).pipe(catchError(this.echec));
     }
 
     creerPartenaire(partenaire: Partenaire): Observable<Partenaire> {
-        return this.http.post<Partenaire>('/api/partenaires', partenaire).pipe(catchError(this.echec));
+        return this.http.post<Partenaire>(`${environment.apiUrl}/api/partenaires`, partenaire).pipe(catchError(this.echec));
     }
 
     modifierPartenaire(id: string, partenaire: Partenaire): Observable<Partenaire> {
-        return this.http.put<Partenaire>(`/api/partenaires/${id}`, partenaire).pipe(catchError(this.echec));
+        return this.http.put<Partenaire>(`${environment.apiUrl}/api/partenaires/${id}`, partenaire).pipe(catchError(this.echec));
     }
 
     // ------------------------------------------------------------ offres
 
     offres(): Observable<OffreAbonnement[]> {
-        return this.http.get<OffreAbonnement[]>('/api/offres').pipe(catchError(this.echec));
+        return this.http.get<OffreAbonnement[]>(`${environment.apiUrl}/api/offres`).pipe(catchError(this.echec));
     }
 
     modulesVendables(): Observable<ModuleVendable[]> {
-        return this.http.get<ModuleVendable[]>('/api/offres/modules').pipe(catchError(this.echec));
+        return this.http.get<ModuleVendable[]>(`${environment.apiUrl}/api/offres/modules`).pipe(catchError(this.echec));
     }
 
     creerOffre(offre: OffreAbonnement): Observable<OffreAbonnement> {
-        return this.http.post<OffreAbonnement>('/api/offres', offre).pipe(catchError(this.echec));
+        return this.http.post<OffreAbonnement>(`${environment.apiUrl}/api/offres`, offre).pipe(catchError(this.echec));
     }
 
     modifierOffre(id: string, offre: OffreAbonnement): Observable<OffreAbonnement> {
-        return this.http.put<OffreAbonnement>(`/api/offres/${id}`, offre).pipe(catchError(this.echec));
+        return this.http.put<OffreAbonnement>(`${environment.apiUrl}/api/offres/${id}`, offre).pipe(catchError(this.echec));
     }
 
     // ------------------------------------------------------------ licences
 
     licences(demande: DemandeDePage): Observable<PageVue<Licence>> {
-        return this.http.get<PageVue<Licence>>('/api/licences', { params: this.parametres(demande) })
+        return this.http.get<PageVue<Licence>>(`${environment.apiUrl}/api/licences`, { params: this.parametres(demande) })
             .pipe(catchError(this.echec));
     }
 
     emettre(demande: DemandeDeLicence): Observable<Licence> {
-        return this.http.post<Licence>('/api/licences', demande).pipe(catchError(this.echec));
+        return this.http.post<Licence>(`${environment.apiUrl}/api/licences`, demande).pipe(catchError(this.echec));
     }
 
     emettreEssai(partenaireId: string, jours?: number): Observable<Licence> {
-        return this.http.post<Licence>('/api/licences/essai', { partenaireId, jours })
+        return this.http.post<Licence>(`${environment.apiUrl}/api/licences/essai`, { partenaireId, jours })
             .pipe(catchError(this.echec));
     }
 
     revoquer(id: string, motif: string): Observable<Licence> {
-        return this.http.post<Licence>(`/api/licences/${id}/revoquer`, { motif })
+        return this.http.post<Licence>(`${environment.apiUrl}/api/licences/${id}/revoquer`, { motif })
             .pipe(catchError(this.echec));
     }
 
     envoyer(id: string, destinataire: string): Observable<Licence> {
-        return this.http.post<Licence>(`/api/licences/${id}/envoyer`, { destinataire })
+        return this.http.post<Licence>(`${environment.apiUrl}/api/licences/${id}/envoyer`, { destinataire })
             .pipe(catchError(this.echec));
     }
 
     /** Adresse du fichier .lic — le navigateur s'en charge, la session accompagne la requête. */
     adresseDuFichier(id: string): string {
-        return `/api/licences/${id}/fichier`;
+        return `${environment.apiUrl}/api/licences/${id}/fichier`;
     }
 
     verifier(jeton: string): Observable<ContenuDeLicence> {
-        return this.http.post<ContenuDeLicence>('/api/licences/verifier', { jeton })
+        return this.http.post<ContenuDeLicence>(`${environment.apiUrl}/api/licences/verifier`, { jeton })
             .pipe(catchError(this.echec));
     }
 
     clePublique(): Observable<{ algorithme: string; clePublique: string; proprieteSpring: string }> {
         return this.http.get<{ algorithme: string; clePublique: string; proprieteSpring: string }>(
-            '/api/licences/cle-publique').pipe(catchError(this.echec));
+            `${environment.apiUrl}/api/licences/cle-publique`).pipe(catchError(this.echec));
     }
 
     session(): Observable<Session> {
-        return this.http.get<Session>('/api/session').pipe(catchError(this.echec));
+        return this.http.get<Session>(`${environment.apiUrl}/api/session`).pipe(catchError(this.echec));
     }
 
     private echec(erreur: HttpErrorResponse) {

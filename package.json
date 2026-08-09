@@ -4,9 +4,11 @@
     "description": "Back-office d'émission des licences QualiSira",
     "scripts": {
         "ng": "ng",
-        "start": "ng build --watch",
+        "start": "ng serve",
         "build": "ng build",
-        "test": "ng test"
+        "test": "ng test",
+        "build:dev": "ng build --configuration development",
+        "watch": "ng build --watch --configuration development"
     },
     "private": true,
     "dependencies": {

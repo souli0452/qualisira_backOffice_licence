@@ -2,6 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, throwError } from 'rxjs';
 
+import { environment } from '../../environments/environment';
 import { Parametre } from '../models/licences.model';
 
 /**
@@ -17,7 +18,7 @@ export class ParametresService {
     private readonly http = inject(HttpClient);
 
     lister(): Observable<Parametre[]> {
-        return this.http.get<Parametre[]>('/api/parametres');
+        return this.http.get<Parametre[]>(`${environment.apiUrl}/api/parametres`);
     }
 
     /**
@@ -28,7 +29,7 @@ export class ParametresService {
      * explications de la même règle.</p>
      */
     modifier(cle: string, valeur: string | null): Observable<Parametre> {
-        return this.http.put<Parametre>(`/api/parametres/${cle}`, { valeur }).pipe(
+        return this.http.put<Parametre>(`${environment.apiUrl}/api/parametres/${cle}`, { valeur }).pipe(
             catchError((erreur: HttpErrorResponse) => throwError(
                 () => new Error(erreur.error?.message ?? 'Enregistrement impossible.')))
         );

@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
+import { environment } from '../../environments/environment';
 import { EntreeDeJournal, PageVue } from '../models/licences.model';
 
 /** Ce que chacun a fait dans l'outil. En lecture seule : rien ne s'y modifie ni ne s'y supprime. */
@@ -24,6 +25,6 @@ export class JournalService {
         if (criteres.depuis) params['depuis'] = criteres.depuis;
         if (criteres.jusqua) params['jusqua'] = criteres.jusqua;
         if (criteres.abouti !== undefined) params['abouti'] = criteres.abouti;
-        return this.http.get<PageVue<EntreeDeJournal>>('/api/journal', { params });
+        return this.http.get<PageVue<EntreeDeJournal>>(`${environment.apiUrl}/api/journal`, { params });
     }
 }

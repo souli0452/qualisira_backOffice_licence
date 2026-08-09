@@ -31,8 +31,13 @@ export const intercepteurAntiRejeu: HttpInterceptorFn = (requete, suivant) => {
         catchError((erreur: HttpErrorResponse) => {
             // La vérification de session échoue légitimement en 401 : c'est ainsi que le garde
             // apprend qu'il faut se connecter. La rediriger ferait boucler l'écran sur lui-même.
+            // « includes » et non « endsWith » sur l'adresse complète : en développement elle
+            // est absolue (http://localhost:8099/api/session), et une comparaison de fin
+            // n'aurait plus reconnu la vérification de session — chaque ouverture d'écran
+            // aurait alors renvoyé à la connexion.
             const verificationDeSession = requete.url.endsWith('/api/session')
-                || requete.url.includes('/api/session/connexion');
+                || requete.url.includes('/api/session/connexion')
+                || requete.url.includes('/api/session/mode');
             if (erreur.status === 401 && !verificationDeSession) {
                 router.navigate(['/connexion']);
             }
