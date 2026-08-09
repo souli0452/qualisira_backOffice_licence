@@ -95,11 +95,6 @@ export class LicencesService {
         return this.http.post<Licence>(`${environment.apiUrl}/api/licences`, demande).pipe(catchError(this.echec));
     }
 
-    emettreEssai(partenaireId: string, jours?: number): Observable<Licence> {
-        return this.http.post<Licence>(`${environment.apiUrl}/api/licences/essai`, { partenaireId, jours })
-            .pipe(catchError(this.echec));
-    }
-
     revoquer(id: string, motif: string): Observable<Licence> {
         return this.http.post<Licence>(`${environment.apiUrl}/api/licences/${id}/revoquer`, { motif })
             .pipe(catchError(this.echec));

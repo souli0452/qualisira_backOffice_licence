@@ -51,6 +51,13 @@ export interface OffreAbonnement {
     montant?: number | null;
     /** Code ISO — « XOF », « EUR ». Additionner des sommes sans devise ne veut rien dire. */
     devise: string;
+    /**
+     * Cette offre est un essai.
+     *
+     * <p>La licence émise est alors de type ESSAI, n'est jamais facturée, et il n'en est accordé
+     * qu'une par partenaire — le serveur reste seul juge de cette dernière règle.</p>
+     */
+    essai: boolean;
     actif: boolean;
 }
 

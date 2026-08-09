@@ -155,8 +155,11 @@ import {
             </div>
 
             <ng-template pTemplate="footer">
-                <p-button label="Offrir un essai (7 j)" severity="secondary" [outlined]="true"
-                          (onClick)="offrirEssai()"></p-button>
+                @if (offreDEssai(); as essai) {
+                    <p-button [label]="'Offrir un essai (' + dureeDe(essai) + ')'"
+                              severity="secondary" [outlined]="true"
+                              (onClick)="offrirEssai(essai)"></p-button>
+                }
                 <p-button label="Annuler" severity="secondary" [text]="true"
                           (onClick)="emissionOuverte = false"></p-button>
                 <p-button label="Émettre la licence" icon="pi pi-check" [loading]="enregistrement"
@@ -486,12 +489,35 @@ export class LicencesComponent implements OnInit {
         });
     }
 
-    offrirEssai(): void {
+    /**
+     * L'offre d'essai du catalogue, s'il y en a une.
+     *
+     * <p>Le bouton n'apparaît que si elle existe : proposer un essai qu'aucune offre ne décrit
+     * mènerait à un refus que rien n'expliquerait.</p>
+     */
+    protected offreDEssai(): OffreAbonnement | undefined {
+        return this.offres.find((o) => o.essai && o.actif);
+    }
+
+    protected dureeDe(offre: OffreAbonnement): string {
+        return `${offre.duree} ${offre.uniteDuree === 'JOURS' ? 'j' : 'mois'}`;
+    }
+
+    /**
+     * Offre un essai — en émettant sur l'offre d'essai, comme n'importe quelle autre licence.
+     *
+     * <p>Il existait un chemin à part pour cela, dont la durée venait d'une variable
+     * d'environnement et les modules d'une liste écrite dans le code. Rien ne s'y réglait sans
+     * livrer une version, et l'on ne savait pas ce qui avait été accordé au prospect précédent.
+     * Tout vient désormais du catalogue, et le serveur reste seul juge du « un par
+     * partenaire ».</p>
+     */
+    offrirEssai(essai: OffreAbonnement): void {
         if (!this.demande.partenaireId) {
             return;
         }
         this.enregistrement = true;
-        this.service.emettreEssai(this.demande.partenaireId).subscribe({
+        this.service.emettre({ partenaireId: this.demande.partenaireId, offreId: essai.id! }).subscribe({
             next: (licence) => {
                 this.enregistrement = false;
                 this.emissionOuverte = false;
@@ -501,7 +527,7 @@ export class LicencesComponent implements OnInit {
                 this.messages.add({
                     severity: 'success',
                     summary: `Essai accordé (${licence.reference})`,
-                    detail: '7 jours, tous les modules ouverts.'
+                    detail: `${this.dureeDe(essai)} — ${essai.modules.length} module(s), selon l'offre « ${essai.libelle} ».`
                 });
             },
             error: (e) => {

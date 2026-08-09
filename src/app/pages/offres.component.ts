@@ -113,6 +113,15 @@ import { ModuleVendable, OffreAbonnement } from '../models/licences.model';
                             Laissé vide, l'offre est « à négocier ».</span>
                     </div>
                     <div class="champ">
+                        <label>Nature</label>
+                        <p-select [(ngModel)]="edite.essai" [options]="natures"
+                                  optionLabel="libelle" optionValue="valeur"
+                                  appendTo="body"></p-select>
+                        <span class="aide">Une offre d'essai n'est jamais facturée, et il n'en est
+                            accordé qu'une par partenaire — sans quoi il suffirait d'en redemander
+                            une à chaque échéance.</span>
+                    </div>
+                    <div class="champ">
                         <label>Devise</label>
                         <p-select [(ngModel)]="edite.devise" [options]="devises"
                                   appendTo="body"></p-select>
@@ -166,6 +175,11 @@ export class OffresComponent implements OnInit {
      * même monnaie et ne s'additionneraient pas entre elles.</p>
      */
     protected readonly devises = ['XOF', 'EUR', 'USD', 'XAF', 'MAD'];
+
+    protected readonly natures = [
+        { libelle: 'Offre commerciale', valeur: false },
+        { libelle: "Offre d'essai", valeur: true }
+    ];
 
     protected readonly unites = [
         { libelle: 'mois', valeur: 'MOIS' },
@@ -247,7 +261,7 @@ export class OffresComponent implements OnInit {
         this.edite = offre
             ? { ...offre, modules: [...offre.modules] }
             : { code: '', libelle: '', duree: 12, uniteDuree: 'MOIS', utilisateursMax: 25,
-                modules: [], actif: true,
+                modules: [], actif: true, essai: false,
                 montant: null, devise: 'XOF' };
         this.ouvert = true;
     }
