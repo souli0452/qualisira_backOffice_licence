@@ -1,143 +1,97 @@
 # Déploiement du back-office
 
-## Il n'y a aucune variable d'environnement
+## Il n'y a aucune variable d'environnement, et aucun serveur web à installer
 
 Ce front est une application Angular compilée en **fichiers statiques**. Il ne lit aucune
 configuration au démarrage, et il n'existe volontairement pas de fichier `environment.ts` : tous
 ses appels sont **relatifs** — `/api`, `/oauth2`, `/logout`.
 
-C'est un choix, pas un oubli. Une adresse de serveur inscrite dans le bundle devrait être connue
-au moment de compiler, ce qui obligerait à reconstruire l'application pour chaque environnement —
-et le même artefact ne pourrait plus être promu de la recette à la production après validation.
+Il n'est pas non plus servi par un serveur à lui. **C'est le service de licences qui le sert**,
+comme le disait déjà son code : *« le back-office est servi par cette application »*.
 
-Ce qui se configure au déploiement n'est donc pas dans l'application : **c'est le serveur qui la
-sert**. Il a deux responsabilités, et la seconde est piégeuse.
+Ce montage n'est pas une commodité. Il fait disparaître trois problèmes plutôt que de les
+configurer :
+
+- **Pas de CORS.** La session est portée par un cookie `HttpOnly` en `SameSite=Lax` : servi
+  ailleurs, il n'accompagnerait pas les appels, et il faudrait ouvrir des origines à la main.
+- **Pas de relais à régler.** Rien à router vers l'API : elle est au même endroit.
+- **Pas d'en-tête `Host` à préserver.** Spring déduit de cet en-tête l'adresse de retour qu'il
+  envoie à Keycloak. Avec un relais devant, la remplacer fait refuser la connexion par le
+  royaume — sur un « Invalid parameter: redirect_uri » que rien ne relie à sa cause, et qui
+  n'apparaît qu'au passage à Keycloak, jamais en mode local. Sans relais, la question ne se pose
+  pas.
 
 ---
 
-## 1. Construire
+## Construire
 
 ```bash
 npm ci
 npx ng build
 ```
 
-Sortie : `dist/backoffice-licences/browser/` — c'est **ce dossier**, et non son parent, qu'il faut
-servir.
+Sortie : `dist/backoffice-licences/browser/` — c'est **ce dossier**, et non son parent.
 
 Construit avec Node 22+ et Angular 19.
 
 ---
 
-## 2. Servir — deux règles
+## Livrer
 
-### a. Repli SPA sur `index.html`
+Recopier ce dossier là où le service de licences peut le lire, et le lui désigner :
 
-Le routage est côté navigateur. Sans repli, un rafraîchissement sur `/licences` ou un lien
-partagé vers `/journal` demande au serveur un fichier qui n'existe pas : il répond 404, et
-l'utilisateur conclut que l'application est cassée.
-
-### b. Relais vers le back-office, **en conservant l'en-tête `Host`**
-
-Le front et l'API doivent être servis sous la **même origine** : la session est portée par un
-cookie `HttpOnly` en `SameSite=Lax`, qui n'accompagnerait pas des appels vers un autre domaine.
-
-Chemins à relayer vers le service de licences : `/api`, `/oauth2`, `/login`, `/logout`.
-
-> **Le piège.** Spring déduit l'adresse de retour envoyée à Keycloak (`redirect_uri`) de
-> l'en-tête `Host` qu'il reçoit. Si le relais le remplace par celui du service — ce que fait
-> `proxy_pass` par défaut —, Spring réclame une adresse interne que le royaume refusera, avec un
-> « Invalid parameter: redirect_uri » que rien ne relie à la configuration du proxy.
->
-> D'où `proxy_set_header Host $host;` ci-dessous. En mode d'authentification locale, l'oubli ne
-> se voit pas : il n'apparaît que le jour où l'on passe à Keycloak.
-
----
-
-## Exemple nginx
-
-```nginx
-server {
-    listen 443 ssl http2;
-    server_name licences.qualisira.com;
-
-    ssl_certificate     /etc/ssl/certs/licences.crt;
-    ssl_certificate_key /etc/ssl/private/licences.key;
-
-    root /var/www/backoffice-licences/browser;
-    index index.html;
-
-    # Les fichiers portent une empreinte dans leur nom : ils ne changent jamais sous
-    # la même adresse, et se mettent donc en cache sans réserve.
-    location /assets/ {
-        expires 30d;
-        add_header Cache-Control "public, immutable";
-    }
-
-    # index.html, lui, n'est jamais mis en cache : c'est lui qui désigne les
-    # empreintes du moment. Mis en cache, une mise en production resterait
-    # invisible jusqu'à expiration.
-    location = /index.html {
-        add_header Cache-Control "no-store";
-    }
-
-    # Repli SPA : le routage est côté navigateur.
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Le service de licences, sous la même origine que le front.
-    location ~ ^/(api|oauth2|login|logout) {
-        proxy_pass http://licences-api:8099;
-
-        # ⚠ L'en-tête d'origine est CONSERVÉ : Spring en déduit l'adresse de retour
-        # envoyée à Keycloak. Le remplacer fait refuser la connexion par le royaume.
-        proxy_set_header Host              $host;
-        proxy_set_header X-Real-IP         $remote_addr;
-        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-
-        # Le téléversement d'un logo depuis l'écran des réglages voyage en base64 :
-        # la limite par défaut de 1 Mo le refuserait.
-        client_max_body_size 4m;
-    }
-}
-
-# HTTP ne sert qu'à rediriger : la session est en cookie « secure ».
-server {
-    listen 80;
-    server_name licences.qualisira.com;
-    return 301 https://$host$request_uri;
-}
+```bash
+LICENCES_FRONT=/var/www/backoffice-licences
 ```
 
+Le service s'en occupe ensuite : il sert les fichiers, et **replie sur `index.html`** tout ce qui
+ressemble à une route — sans quoi rafraîchir sur `/licences` ou ouvrir un lien vers `/journal`
+donnerait un 404, et l'utilisateur conclurait que l'application est cassée.
+
+Ce qui porte une extension en est exclu : une image absente rend un 404, et non la page
+d'accueil. Recevoir du HTML là où on attend une image est une panne bien plus difficile à lire
+qu'un fichier manquant.
+
+Sans `LICENCES_FRONT`, les fichiers sont cherchés dans le jar (`classpath:/static/`), pour qui
+préfère tout empaqueter ensemble.
+
+**Le front se met donc à jour sans reconstruire le serveur** : on remplace le dossier, on
+rafraîchit.
+
 ---
 
-## Ce que le back-office attend en face
+## Développer
 
-Trois réglages du service de licences doivent s'accorder avec ce qui précède — voir son
-`.env.example` :
+```bash
+npx ng build --watch        # reconstruit à chaque enregistrement
+```
+
+et lancer le service de licences en lui désignant la sortie :
+
+```bash
+LICENCES_FRONT=…/backOffice_licences/dist/backoffice-licences/browser  mvn spring-boot:run
+```
+
+Tout est alors sur `http://localhost:8099`. Il n'y a plus de `ng serve` ni de `proxy.conf.json` :
+le serveur de développement d'Angular servait le front sur un autre port que l'API, ce qui
+imposait un relais — et ce relais réécrivait l'en-tête `Host`, cassant le flot Keycloak sans
+prévenir.
+
+Un rafraîchissement du navigateur suffit à voir un changement.
+
+---
+
+## Ce que le service attend en face
 
 | Variable | Valeur attendue | Sinon |
 | --- | --- | --- |
-| `LICENCES_COOKIE_SECURE` | `true` | le cookie de session circule aussi en clair |
-| `LICENCES_CORS` | l'origine servie ici | les appels du navigateur sont refusés |
+| `LICENCES_FRONT` | le dossier livré | les fichiers sont cherchés dans le jar |
+| `LICENCES_COOKIE_SECURE` | `true` derrière HTTPS | le cookie de session circule aussi en clair |
 | `LICENCES_AUTH` | `keycloak` en production | l'authentification reste locale |
 
-Le `LICENCES_CORS` n'est utile que si le front est servi depuis une autre origine que l'API. Dans
-la configuration ci-dessus il ne l'est pas — et c'est préférable : même origine, pas de CORS, et
-un cookie qui accompagne chaque appel sans réserve.
+`LICENCES_CORS` ne sert plus dans ce montage : il n'y a qu'une origine.
 
----
-
-## En développement
-
-`proxy.conf.json` fait le même travail que le bloc nginx :
-
-```bash
-npm start        # sert sur http://localhost:4300, relaie vers 8099
-```
-
-Il relaie `/api`, `/oauth2`, `/login` et `/logout` **sans `changeOrigin`** — pour la raison
-exposée plus haut : l'en-tête `Host` doit rester celui du front, faute de quoi le flot Keycloak
-échoue.
+Si un répartiteur de charge ou un terminateur TLS est placé devant, il doit **conserver
+l'en-tête `Host`** (`proxy_set_header Host $host;` sous nginx) — pour la raison exposée plus
+haut. Et le téléversement d'un logo depuis l'écran des réglages voyage en base64 :
+`client_max_body_size 4m;` évite un refus peu parlant.
